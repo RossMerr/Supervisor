@@ -1,0 +1,13 @@
+﻿{
+	"version": "1.0.0-*",
+	"dependencies": {
+		"RAFTiNG": "0.0.5559.32034",
+		"Michonne": "0.4.0"
+	},
+    "frameworks" : {
+        "aspnet50" : { 
+            "dependencies": {
+            }
+        }
+    }
+}

@@ -1,9 +1,9 @@
 ﻿using System;
 using RAFTiNG.Services;
 
-namespace Supervisor.Agent
+namespace Supervisor.Common
 {
-	internal class StateMachine : IStateMachine<string>
+	public class StateMachine : IStateMachine<string>
 	{
 		/// <summary>
 		/// Commits the specified command.

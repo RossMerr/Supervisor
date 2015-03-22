@@ -5,27 +5,16 @@ using Michonne.Implementation;
 using Michonne.Interfaces;
 using RAFTiNG.Services;
 
-namespace Supervisor.Agent
+namespace Supervisor.Common
 {
 	public class Middleware : IMiddleware
 	{
-		private readonly Dictionary<string, Action<object>> endpoints = new Dictionary<string, Action<object>>();
+		private readonly Dictionary<string, Action<object>> _endpoints = new Dictionary<string, Action<object>>();
+		private readonly Dictionary<string, ISequencer> _sequencers = new Dictionary<string, ISequencer>();
+		private readonly ILog _logger = LogManager.GetLogger(typeof(Middleware));
+		private readonly ISequencer _sequencer;
 
-		private readonly Dictionary<string, ISequencer> sequencers = new Dictionary<string, ISequencer>();
-
-		private readonly ILog logger = LogManager.GetLogger("MockMiddleware");
-
-		private readonly IUnitOfExecution root;
-
-		private readonly ISequencer sequencer;
-
-		public IUnitOfExecution RootUnitOfExecution
-		{
-			get
-			{
-				return this.root;
-			}
-		}
+		public IUnitOfExecution RootUnitOfExecution { get; }
 
 		/// <summary>
 		/// Initializes a new instance of the <see cref="Middleware"/> class.
@@ -35,13 +24,13 @@ namespace Supervisor.Agent
 		{
 			if (asyncMode)
 			{
-				this.root = TestHelpers.GetPool();
+				RootUnitOfExecution = TestHelpers.GetPool();
 			}
 			else
 			{
-				this.root = TestHelpers.GetSynchronousUnitOfExecution();
+				RootUnitOfExecution = TestHelpers.GetSynchronousUnitOfExecution();
 			}
-			this.sequencer = this.root.BuildSequencer();
+			_sequencer = RootUnitOfExecution.BuildSequencer();
 		}
 
 		/// <summary>
@@ -53,19 +42,19 @@ namespace Supervisor.Agent
 		/// <remarks>This is a best effort delivery contract. There is no guaranteed delivery.</remarks>
 		public bool SendMessage(string addressDest, object message)
 		{
-			if (!this.endpoints.ContainsKey(addressDest))
+			if (!_endpoints.ContainsKey(addressDest))
 			{
 				return false;
 			}
 			try
 			{
-				this.sequencers[addressDest].Dispatch(
-					() => this.endpoints[addressDest].Invoke(message));
+				_sequencers[addressDest].Dispatch(
+					() => _endpoints[addressDest].Invoke(message));
 			}
 			catch (Exception e)
 			{
 				// exceptions must not cross middleware boundaries
-				this.logger.Error("Exception raised when processing message.", e);
+				_logger.Error("Exception raised when processing message.", e);
 			}
 			return true;
 		}
@@ -78,7 +67,7 @@ namespace Supervisor.Agent
 		/// <exception cref="System.InvalidOperationException">If an endpoint is registered more than once.</exception>
 		public void RegisterEndPoint(string address, Action<object> messageReceived)
 		{
-			this.sequencer.Dispatch(
+			_sequencer.Dispatch(
 				() =>
 				{
 					if (string.IsNullOrEmpty(address))
@@ -91,14 +80,14 @@ namespace Supervisor.Agent
 						throw new ArgumentNullException("messageReceived");
 					}
 
-					if (this.endpoints.ContainsKey(address))
+					if (_endpoints.ContainsKey(address))
 					{
 						// double registration is development error.
 						throw new InvalidOperationException("Invalid registration attempt: endpoints can only be registered once.");
 					}
 
-					this.endpoints[address] = messageReceived;
-					this.sequencers[address] = this.root.BuildSequencer();
+					_endpoints[address] = messageReceived;
+					_sequencers[address] = RootUnitOfExecution.BuildSequencer();
 				});
 		}
 	}
