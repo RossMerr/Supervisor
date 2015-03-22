@@ -1,16 +1,14 @@
-﻿{
-    "version": "1.0.0-*",
-    "dependencies": {
-    },
+{
+	"version": "1.0.0-*",
+	"dependencies": {
+		"Microsoft.AspNet.Mvc": "6.0.0-beta2",
+		"RAFTiNG": "0.0.5559.32034",
+		"Michonne": "0.4.0"
+	},
 
     "frameworks" : {
         "aspnet50" : { 
             "dependencies": {
-            }
-        },
-        "aspnetcore50" : { 
-            "dependencies": {
-                "System.Runtime": "4.0.20-beta-22416"
             }
         }
     }
