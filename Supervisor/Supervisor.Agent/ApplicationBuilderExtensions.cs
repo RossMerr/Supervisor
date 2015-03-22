@@ -17,13 +17,14 @@ namespace Supervisor.Agent
 				Nodes = new string[] {}
 		    };
 
-			var testedNode = new Node<string>(TestHelpers.GetPool().BuildSequencer(), 
+			var testedNode = new Node<Service>(TestHelpers.GetPool().BuildSequencer(), 
 				settings,
 				new Middleware(), 
 				new StateMachine());
 
 			testedNode.Initialize();
-
+			testedNode.AddEntry(new Service());
+		    testedNode.SendCommand(new Service());
 			return app;
 	    }
 	}
